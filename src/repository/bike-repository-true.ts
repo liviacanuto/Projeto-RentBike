@@ -7,7 +7,10 @@ import crypto from 'crypto'
 export class BikeRepositoryTrue implements BikeRepo {
     async find(id: string): Promise<Bike> {
         const [rows] = await connection.execute<Bike[]>('SELECT * FROM Bike WHERE IDBike = ?', [id]);
-        return rows?.[0];
+        const found = rows?.[0]
+        found.location = {'latitude' : found.latitude, 'longitude' : found.longitude};
+        found.id = found.IDBike;
+        return found;
     }
 
     async add(bike: Bike): Promise<string> {
@@ -26,8 +29,8 @@ export class BikeRepositoryTrue implements BikeRepo {
 
     async update(id: string, bike: Bike): Promise<void> {
         const result = await connection.execute(
-            'UPDATE Bike SET name = ?, type = ?, bodySize = ?, maxLoad = ? , rate = ? , description = ?, ratings = ?, imageUrls = ?, available = ?, latitude = ?, longitude = ?, IDBike = ?',
-            [bike.name, bike.type, bike.bodySize, bike.maxLoad, bike.rate, bike.description, bike.ratings, bike.imageUrls, bike.available, bike.location.latitude, bike.location.longitude, bike.id]
+            'UPDATE Bike SET name = ?, type = ?, bodySize = ?, maxLoad = ? , rate = ? , description = ?, ratings = ?, imageUrls = ?, available = ?, latitude = ?, longitude = ? WHERE IDBike = ?',
+            [bike.name, bike.type, bike.bodySize, bike.maxLoad, bike.rate, bike.description, bike.ratings, bike.imageUrls, bike.available, bike.location.latitude, bike.location.longitude, id]
         );
     }
 
