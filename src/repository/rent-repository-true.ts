@@ -7,13 +7,7 @@ import crypto from 'crypto'
 
 
 export class RentRepositoryTrue implements RentRepo {
-    findOpen(bikeId: string, userEmail: string): Promise<Rent> {
-        throw new Error("Method not implemented.");
-    }
-    findOpenFor(userEmail: string): Promise<Rent[]> {
-        throw new Error("Method not implemented.");
-    }
-    
+
     async find(id: string): Promise<Rent> {
         const [rows] = await connection.execute<Rent[]>('SELECT * FROM Rent WHERE IDRent = ?', [id]);
         return rows?.[0];
@@ -30,26 +24,22 @@ export class RentRepositoryTrue implements RentRepo {
         return rent.id;
     }
 
-    async findOpen(bikeId: string, userEmail: string): Promise<Rent>{
+    async findOpen(bikeId: string, userEmail: string): Promise<Rent> {
         const query = 'SELECT * FROM Rent WHERE IDBike = ? AND IDUser = ? AND EndDate IS NULL';
         const values = [bikeId, userEmail];
-    
-        try {
-            const [rows] = await connection.execute(query, values);
-            if (rows.length > 0) {
-                return rows[0];
-            }  
+
+        const [rows] = await connection.execute(query, values);
+        if (rows?.[0] > 0) {
+            return rows[0];
+        }
     }
 
     async findOpenFor(userEmail: string): Promise<Rent[]> {
         const query = 'SELECT * FROM Rent WHERE IDUser = ? AND EndDate IS NULL';
         const values = [userEmail];
-    
-        try {
-            const [rows] = await connection.execute(query, values);
+        const [rows] = await connection.execute(query, values);
 
-            return rows;
-        }
+        return rows?.[0];
 
     }
 
