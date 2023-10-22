@@ -47,8 +47,10 @@ export class RentRepositoryTrue implements RentRepo {
     
         try {
             const [rows] = await connection.execute(query, values);
+
             return rows;
         }
+
     }
 
     async update(id: string, rent: Rent): Promise<void> {
