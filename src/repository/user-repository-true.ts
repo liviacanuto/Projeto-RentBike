@@ -1,15 +1,17 @@
 //user
-import { User } from "../user";
+import crypto from 'crypto';
 import { UserRepo } from "../ports/user-repo";
+import { User } from "../user";
 import connection from "./database";
-import crypto from 'crypto'
 
 
 export class UserRepositoryTrue implements UserRepo {
     async find(email: string): Promise<User> {
         const [rows] = await connection.execute<User[]>('SELECT * FROM User WHERE Email = ?', [email]);
         const found = rows?.[0];
-        found.id = found.IDUser;
+        if (found) {
+            found.id = found.IDUser;
+        }
         return found;
     }
 

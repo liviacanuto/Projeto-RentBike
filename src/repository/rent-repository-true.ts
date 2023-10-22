@@ -1,9 +1,9 @@
-
-//rent
-import { Rent } from "../rent";
+import crypto from 'crypto';
 import { RentRepo } from "../ports/rent-repo";
+import { Rent } from "../rent";
+import bikeRepositoryTrue from "./bike-repository-true";
 import connection from "./database";
-import crypto from 'crypto'
+import userRepositoryTrue from "./user-repository-true";
 
 
 export class RentRepositoryTrue implements RentRepo {
@@ -25,28 +25,41 @@ export class RentRepositoryTrue implements RentRepo {
     }
 
     async findOpen(bikeId: string, userEmail: string): Promise<Rent> {
-        const query = 'SELECT * FROM Rent WHERE IDBike = ? AND IDUser = ? AND EndDate IS NULL';
+        const query = 'SELECT Rent.* FROM Rent JOIN User ON Rent.IDUser = User.IDUser WHERE Rent.IDBike = ? AND User.email = ? AND EndDate IS NULL';
         const values = [bikeId, userEmail];
 
         const [rows] = await connection.execute(query, values);
-        if (rows?.[0] > 0) {
-            return rows[0];
+        const rent: Rent = rows?.[0];
+        if (rent) {
+            rent.bike = await bikeRepositoryTrue.find(bikeId);
+            rent.user = await userRepositoryTrue.find(userEmail);
+            const result = new Rent(rent.bike, rent.user, rent.StartDate, rent.IDRent);
+            result.end = rent.EndDate;
+            return result;
         }
+        return rent;
     }
 
     async findOpenFor(userEmail: string): Promise<Rent[]> {
-        const query = 'SELECT * FROM Rent WHERE IDUser = ? AND EndDate IS NULL';
+        const query = 'SELECT Rent.* FROM Rent JOIN User ON Rent.IDUser = User.IDUser WHERE User.email = ? AND EndDate IS NULL';
         const values = [userEmail];
-        const [rows] = await connection.execute(query, values);
+        const [rows] = await connection.execute<Rent[]>(query, values);
+        const rents = await Promise.all(rows.map(async (rent) => {
+            rent.bike = await bikeRepositoryTrue.find(rent.IDBike);
+            rent.user = await userRepositoryTrue.find(userEmail);
+            const result = new Rent(rent.bike, rent.user, rent.StartDate, rent.IDRent);
+            result.end = rent.EndDate;
+            return result;
+        }))
 
-        return rows?.[0];
+        return rents;
 
     }
 
     async update(id: string, rent: Rent): Promise<void> {
         const result = await connection.execute(
-            'UPDATE Rent SET bike = ?, user = ?, start = ? WHERE IDRent = ?',
-            [rent.bike.id, rent.user.id, rent.start, id]
+            'UPDATE Rent SET IDBike = ?, IDUser = ?, EndDate = ? WHERE IDRent = ?',
+            [rent.bike.id, rent.user.id, rent.end, id]
         );
     }
 

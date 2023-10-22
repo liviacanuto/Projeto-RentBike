@@ -1,14 +1,14 @@
+import crypto from 'crypto';
 import { Bike } from "../bike";
 import { BikeRepo } from "../ports/bike-repo";
 import connection from "./database";
-import crypto from 'crypto'
 
 
 export class BikeRepositoryTrue implements BikeRepo {
     async find(id: string): Promise<Bike> {
         const [rows] = await connection.execute<Bike[]>('SELECT * FROM Bike WHERE IDBike = ?', [id]);
         const found = rows?.[0]
-        found.location = {'latitude' : found.latitude, 'longitude' : found.longitude};
+        found.location = { 'latitude': found.latitude, 'longitude': found.longitude };
         found.id = found.IDBike;
         return found;
     }
