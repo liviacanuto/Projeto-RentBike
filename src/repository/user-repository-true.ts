@@ -26,6 +26,7 @@ export class UserRepositoryTrue implements UserRepo {
     }
 
     async remove(email: string): Promise<void> {
+        await connection.execute('DELETE Rent.* FROM Rent JOIN User ON Rent.IDUser = User.IDUser WHERE User.email = ?', [email])
         await connection.execute('DELETE FROM User WHERE Email = ?', [email]);
     }
 
